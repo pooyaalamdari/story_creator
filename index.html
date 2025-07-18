@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تولید عکس با متن و هایلایت</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css2?family=Amatic+SC&family=Architects+Daughter&family=Caveat&family=Indie+Flower&family=Pangolin&family=Patrick+Hand&display=swap" rel="stylesheet">
+
+    <style>
+        @font-face {
+            font-family: 'Far_Rooznameh';
+            src: url('Far_Rooznameh.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        /* New Font Face */
+        @font-face {
+            font-family: 'Pooya Handwriting';
+            src: url('Pooya_handwriting-Regular.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        body {
+            font-family: 'Amatic SC', 'Far_Rooznameh', sans-serif !important; /* Default font stack for body */
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f2f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #333;
+        }
+
+        .main-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            max-width: 1200px;
+            width: 100%;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .controls {
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            flex: 1;
+            min-width: 300px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        textarea {
+            width: calc(100% - 20px);
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+            min-height: 150px;
+            resize: vertical;
+            direction: rtl;
+            text-align: right;
+        }
+
+        input[type="range"], input[type="color"], input[type="file"] {
+            width: 100%;
+            cursor: pointer;
+        }
+        
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button {
+            padding: 12px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .output-section {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 30px;
+        }
+
+        #imagePreviewContainer {
+            /* Changed for this fix: Always transparent by default for capture consistency */
+            background-color: transparent; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative; /* Changed for text dragging */
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            /* Default dimensions will be set by JS */
+            width: 1080px;
+            height: 1080px;
+        }
+
+        #imagePreviewContainer.a4-size {
+            width: 1080px; /* Base width for preview */
+            height: 1527px; /* 1080px * (297/210) approx 1.414 */
+        }
+
+        #imagePreviewContainer.instagram-story-size {
+            width: 1080px;
+            height: 1920px;
+        }
+
+        #imageBackground {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            /* Default background color */
+            background-color: #021528; /* Set default here for initial load */
+        }
+
+        #imagePreviewText {
+            /* Changed for dragging */
+            position: absolute; 
+            top: 50%; 
+            left: 50%;
+            transform: translate(-50%, -50%); /* Centers the text initially */
+            
+            color: white; /* Default text color */
+            font-size: 48px;
+            max-width: 90%;
+            max-height: 90%;
+            /* text-align: center; This will be set by JS based on direction */
+            padding: 50px;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+            line-height: 1.5;
+            box-sizing: border-box;
+            z-index: 1; /* Ensure text is above background */
+            background-color: transparent !important; /* IMPORTANT: Force transparency */
+            cursor: grab; /* Indicates draggable */
+        }
+
+        #imagePreviewText.dragging {
+            cursor: grabbing;
+        }
+
+        /* Base highlighted style */
+        .highlighted {
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+
+        /* Highlight Color Classes */
+        .highlight-yellow { background-color: rgba(255, 255, 0, 0.7); color: black; }
+        .highlight-purple { background-color: rgba(128, 0, 128, 0.7); color: white; }
+        .highlight-skyblue { background-color: rgba(135, 206, 235, 0.7); color: black; }
+        .highlight-green { background-color: rgba(0, 128, 0, 0.7); color: white; }
+        .highlight-orange { background-color: rgba(255, 165, 0, 0.7); color: black; }
+        .highlight-pink { background-color: rgba(255, 192, 203, 0.7); color: black; }
+
+
+        .katex {
+            font-size: inherit !important;
+        }
+        .katex-display {
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding-bottom: 0.5em;
+            display: block;
+            text-align: center;
+        }
+
+        #downloadBtn {
+            margin-top: 20px;
+            background-color: #28a745;
+        }
+
+        #downloadBtn:hover {
+            background-color: #218838;
+        }
+
+        /* Color Palette Styles */
+        .color-palette {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+            justify-content: center;
+        }
+
+        .color-box {
+            width: 35px;
+            height: 35px;
+            border: 2px solid transparent;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: border-color 0.2s ease, transform 0.2s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .color-box:hover {
+            transform: scale(1.1);
+        }
+
+        .color-box.selected {
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px #007bff, 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Specific colors */
+        .color-yellow { background-color: rgba(255, 255, 0, 0.7); }
+        .color-purple { background-color: rgba(128, 0, 128, 0.7); }
+        .color-skyblue { background-color: rgba(135, 206, 235, 0.7); }
+        .color-green { background-color: rgba(0, 128, 0, 0.7); }
+        .color-orange { background-color: rgba(255, 165, 0, 0.7); }
+        .color-pink { background-color: rgba(255, 192, 203, 0.7); }
+
+
+        /* Responsive adjustments */
+        @media (max-width: 1100px) {
+            #imagePreviewContainer {
+                /* Defaults to square or A4/Instagram aspect ratio based on selected type */
+                max-width: 1080px;
+                max-height: 1920px; /* Max height for instagram story */
+            }
+            #imagePreviewContainer.a4-size {
+                width: 90vw;
+                height: calc(90vw * 1.414);
+            }
+            #imagePreviewContainer.instagram-story-size {
+                width: 90vw;
+                height: calc(90vw * (1920 / 1080));
+            }
+            #imagePreviewText {
+                 /* padding: 5vw; Keeping padding in px for consistent drag behavior */
+            }
+        }
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>ساخت تصویر با متن و هایلایت</h1>
+    <div class="main-content">
+        <div class="controls">
+            <label for="outputFormatSelector">انتخاب فرمت خروجی:</label>
+            <select id="outputFormatSelector">
+                <option value="custom">سفارشی (۱:۱)</option>
+                <option value="a4">A4</option>
+                <option value="instagram-story">اینستاگرام استوری (۹:۱۶)</option>
+            </select>
+
+            <label for="textInput">متن خود را اینجا وارد کنید:</label>
+            <textarea id="textInput" placeholder="متن مورد نظر خود را وارد کنید..."></textarea>
+
+            <label for="fontSizeSlider">اندازه فونت: <span id="fontSizeValue">48</span>px</label>
+            <input type="range" id="fontSizeSlider" min="10" max="100" value="48">
+            
+            <label for="fontSelector">انتخاب فونت:</label>
+            <select id="fontSelector"></select>
+
+            <label>جهت متن:</label>
+            <div style="display: flex; gap: 10px;">
+                <button id="rtlBtn" style="background-color: #6c757d;">راست به چپ (RTL)</button>
+                <button id="ltrBtn" style="background-color: #6c757d;">چپ به راست (LTR)</button>
+            </div>
+
+            <label for="textColorPicker">انتخاب رنگ متن:</label>
+            <input type="color" id="textColorPicker" value="#FFFFFF"> <label for="backgroundColorPicker">انتخاب رنگ پس‌زمینه:</label>
+            <input type="color" id="backgroundColorPicker" value="#021528"> <label for="backgroundImageUpload">آپلود عکس پس‌زمینه:</label>
+            <input type="file" id="backgroundImageUpload" accept="image/*">
+            <button id="clearImageBtn" style="background-color: #dc3545;">پاک کردن عکس</button>
+
+            <label>انتخاب رنگ هایلایت:</label>
+            <div class="color-palette" id="colorPalette">
+                </div>
+
+            <button id="highlightBtn">هایلایت کردن متن انتخاب شده</button>
+        </div>
+    </div>
+
+    <div class="output-section">
+        <h2>پیش‌نمایش تصویر</h2>
+        <div id="imagePreviewContainer">
+            <div id="imageBackground"></div> <div id="imagePreviewText"></div>
+        </div>
+        <button id="downloadBtn">دانلود تصویر</button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+    <script>
+        const textInput = document.getElementById('textInput');
+        const imagePreviewText = document.getElementById('imagePreviewText');
+        const fontSizeSlider = document.getElementById('fontSizeSlider');
+        const fontSizeValue = document.getElementById('fontSizeValue');
+        const highlightBtn = document.getElementById('highlightBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+        const colorPalette = document.getElementById('colorPalette');
+        const fontSelector = document.getElementById('fontSelector');
+        const rtlBtn = document.getElementById('rtlBtn');
+        const ltrBtn = document.getElementById('ltrBtn');
+        const outputFormatSelector = document.getElementById('outputFormatSelector');
+        const backgroundColorPicker = document.getElementById('backgroundColorPicker');
+        const backgroundImageUpload = document.getElementById('backgroundImageUpload');
+        const clearImageBtn = document.getElementById('clearImageBtn');
+        const imageBackground = document.getElementById('imageBackground');
+        const textColorPicker = document.getElementById('textColorPicker');
+
+        let highlightedRanges = [];
+        let selectedHighlightColorClass = 'highlight-yellow';
+        let currentTextDirection = 'rtl';
+        let currentOutputFormat = 'custom';
+        let uploadedImageBlob = null;
+
+        let isDragging = false;
+        let initialMouseX, initialMouseY;
+        let initialTextX, initialTextY;
+
+        // Define available highlight colors
+        const highlightColors = [
+            { name: 'yellow', class: 'highlight-yellow', default: true },
+            { name: 'purple', class: 'highlight-purple' },
+            { name: 'skyblue', class: 'highlight-skyblue' },
+            { name: 'green', class: 'highlight-green' },
+            { name: 'orange', class: 'highlight-orange' },
+            { name: 'pink', class: 'highlight-pink' }
+        ];
+
+        // Define available fonts
+        const availableFonts = [
+            { name: 'Amatic SC', value: "'Amatic SC', cursive", default: true },
+            { name: 'Far Rooznameh', value: "'Far_Rooznameh', sans-serif" },
+            { name: 'Pooya Handwriting', value: "'Pooya Handwriting', cursive" }, // Added Pooya Handwriting
+            { name: 'Pangolin', value: "'Pangolin', cursive" },
+            { name: 'Architects Daughter', value: "'Architects Daughter', cursive" },
+            { name: 'Caveat', value: "'Caveat', cursive" },
+            { name: 'Indie Flower', value: "'Indie Flower', cursive" },
+            { name: 'Patrick Hand', value: "'Patrick Hand', cursive" }
+        ];
+        let selectedFontFamily = availableFonts.find(f => f.default).value;
+
+        // Function to create font selector options
+        function createFontSelector() {
+            availableFonts.forEach(font => {
+                const option = document.createElement('option');
+                option.value = font.value;
+                option.textContent = font.name;
+                if (font.default) {
+                    option.selected = true;
+                }
+                fontSelector.appendChild(option);
+            });
+            imagePreviewText.style.fontFamily = selectedFontFamily;
+            textInput.style.fontFamily = selectedFontFamily;
+        }
+
+        // Function to create color palette buttons
+        function createColorPalette() {
+            highlightColors.forEach(color => {
+                const colorBox = document.createElement('div');
+                colorBox.className = `color-box color-${color.name}`;
+                colorBox.dataset.colorClass = color.class;
+                if (color.default) {
+                    colorBox.classList.add('selected');
+                }
+                colorBox.addEventListener('click', () => {
+                    document.querySelectorAll('.color-box').forEach(box => {
+                        box.classList.remove('selected');
+                    });
+                    colorBox.classList.add('selected');
+                    selectedHighlightColorClass = color.class;
+                });
+                colorPalette.appendChild(colorBox);
+            });
+        }
+
+        // Helper to escape HTML characters
+        function escapeHtml(text) {
+            var map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
+
+        // Function to clean text by removing non-printable/control characters
+        function cleanText(text) {
+            text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+            return text.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u200C\u200D\uFEFF]/g, '');
+        }
+
+        // Helper function to process a plain text segment and apply highlights
+        function processTextSegmentForRendering(textSegment, segmentStartIndex) {
+            let segmentHtml = '';
+            let segmentCurrentIndex = 0;
+
+            let currentSegmentHighlights = [];
+            highlightedRanges.forEach(hRange => {
+                if (hRange.start < segmentStartIndex + textSegment.length && hRange.end > segmentStartIndex) {
+                    const adjustedStart = Math.max(0, hRange.start - segmentStartIndex);
+                    const adjustedEnd = Math.min(textSegment.length, hRange.end - segmentStartIndex);
+                    if (adjustedStart < adjustedEnd) {
+                        currentSegmentHighlights.push({ start: adjustedStart, end: adjustedEnd, colorClass: hRange.colorClass });
+                    }
+                }
+            });
+
+            currentSegmentHighlights.sort((a, b) => a.start - b.start);
+
+            currentSegmentHighlights.forEach(hRange => {
+                segmentHtml += escapeHtml(textSegment.substring(segmentCurrentIndex, hRange.start));
+                segmentHtml += `<span class="highlighted ${hRange.colorClass}">${escapeHtml(textSegment.substring(hRange.start, hRange.end))}</span>`;
+                segmentCurrentIndex = hRange.end;
+            });
+
+            segmentHtml += escapeHtml(textSegment.substring(segmentCurrentIndex));
+
+            return segmentHtml;
+        }
+
+        // Function to update the preview text, apply highlights and render math
+        function updatePreview() {
+            if (typeof katex === 'undefined') {
+                console.error("KaTeX library not loaded. Math rendering will not work. Please check network and CDN links.");
+                imagePreviewText.innerHTML = "Error: Math rendering library (KaTeX) not loaded. Please check your internet connection and browser console for details.";
+                return;
+            }
+
+            let inputText = textInput.value;
+            inputText = cleanText(inputText);
+
+            let finalHtml = '';
+            let lastIndex = 0;
+
+            imagePreviewText.style.direction = currentTextDirection;
+            imagePreviewText.style.textAlign = currentTextDirection === 'rtl' ? 'right' : 'left';
+            imagePreviewText.style.color = textColorPicker.value;
+
+            const mathRegex = /(\$\$[\s\S]*?\$\$|\$[^$]*\$)/g;
+            let match;
+
+            while ((match = mathRegex.exec(inputText)) !== null) {
+                const mathStart = match.index;
+                const mathEnd = mathStart + match[0].length;
+                const mathContentWithDelimiters = match[0];
+
+                const preMathSegment = inputText.substring(lastIndex, mathStart);
+                finalHtml += processTextSegmentForRendering(preMathSegment, lastIndex);
+
+                try {
+                    let strippedMath;
+                    let isDisplayMode;
+
+                    if (mathContentWithDelimiters.startsWith('$$')) {
+                        strippedMath = mathContentWithDelimiters.slice(2, -2);
+                        isDisplayMode = true;
+                    } else if (mathContentWithDelimiters.startsWith('$')) {
+                        strippedMath = mathContentWithDelimiters.slice(1, -1);
+                        isDisplayMode = false;
+                    } else {
+                        strippedMath = mathContentWithDelimiters;
+                        isDisplayMode = false;
+                    }
+
+                    const renderedMath = katex.renderToString(strippedMath, {
+                        throwOnError: false,
+                        displayMode: isDisplayMode
+                    });
+                    finalHtml += renderedMath;
+
+                } catch (e) {
+                    console.error("KaTeX rendering FAILED for:", mathContentWithDelimiters, "Error details:", e);
+                    finalHtml += escapeHtml(mathContentWithDelimiters);
+                }
+
+                lastIndex = mathEnd;
+            }
+
+            const remainingText = inputText.substring(lastIndex);
+            finalHtml += processTextSegmentForRendering(remainingText, lastIndex);
+
+            imagePreviewText.innerHTML = finalHtml.replace(/\n/g, '<br>');
+
+            imagePreviewText.offsetHeight;
+        }
+
+        // Function to set container dimensions based on selected format
+        function setContainerDimensions(format) {
+            imagePreviewContainer.classList.remove('a4-size', 'instagram-story-size');
+            currentOutputFormat = format;
+
+            switch (format) {
+                case 'custom':
+                    imagePreviewContainer.style.width = '1080px';
+                    imagePreviewContainer.style.height = '1080px';
+                    break;
+                case 'a4':
+                    imagePreviewContainer.classList.add('a4-size');
+                    imagePreviewContainer.style.width = '1080px';
+                    imagePreviewContainer.style.height = '1527px';
+                    break;
+                case 'instagram-story':
+                    imagePreviewContainer.classList.add('instagram-story-size');
+                    imagePreviewContainer.style.width = '1080px';
+                    imagePreviewContainer.style.height = '1920px';
+                    break;
+            }
+            imagePreviewContainer.style.maxWidth = '';
+            imagePreviewContainer.style.maxHeight = '';
+
+            // Reset text position to center when format changes
+            resetTextPosition();
+        }
+
+        function resetTextPosition() {
+            imagePreviewText.style.top = '50%';
+            imagePreviewText.style.left = '50%';
+            imagePreviewText.style.transform = 'translate(-50%, -50%)';
+        }
+
+        // Event Listeners
+        textInput.addEventListener('input', () => {
+            highlightedRanges = [];
+            updatePreview();
+        });
+
+        fontSizeSlider.addEventListener('input', () => {
+            const fontSize = fontSizeSlider.value;
+            fontSizeValue.textContent = fontSize;
+            imagePreviewText.style.fontSize = `${fontSize}px`;
+        });
+
+        fontSelector.addEventListener('change', () => {
+            selectedFontFamily = fontSelector.value;
+            imagePreviewText.style.fontFamily = selectedFontFamily;
+            textInput.style.fontFamily = selectedFontFamily;
+        });
+
+        rtlBtn.addEventListener('click', () => {
+            currentTextDirection = 'rtl';
+            textInput.style.direction = 'rtl';
+            textInput.style.textAlign = 'right';
+            updatePreview();
+        });
+
+        ltrBtn.addEventListener('click', () => {
+            currentTextDirection = 'ltr';
+            textInput.style.direction = 'ltr';
+            textInput.style.textAlign = 'left';
+            updatePreview();
+        });
+
+        textColorPicker.addEventListener('input', (event) => {
+            imagePreviewText.style.color = event.target.value;
+        });
+
+        highlightBtn.addEventListener('click', () => {
+            const start = textInput.selectionStart;
+            const end = textInput.selectionEnd;
+
+            if (start < end) {
+                const newRange = { start, end, colorClass: selectedHighlightColorClass };
+                let isOverlappingOrDuplicate = false;
+                for (let i = 0; i < highlightedRanges.length; i++) {
+                    const existingRange = highlightedRanges[i];
+                    if ((newRange.start >= existingRange.start && newRange.start < existingRange.end) ||
+                        (newRange.end > existingRange.start && newRange.end <= existingRange.end) ||
+                        (existingRange.start >= newRange.start && existingRange.start < newRange.end) ||
+                        (existingRange.end > newRange.start && existingRange.end <= newRange.end)) {
+                        isOverlappingOrDuplicate = true;
+                        break;
+                    }
+                }
+                if (!isOverlappingOrDuplicate) {
+                    highlightedRanges.push(newRange);
+                    updatePreview();
+                } else {
+                    alert('بخش انتخاب شده با هایلایت‌های قبلی همپوشانی دارد یا قبلاً هایلایت شده است.');
+                }
+            } else {
+                alert('لطفاً بخشی از متن را برای هایلایت انتخاب کنید.');
+            }
+        });
+
+        outputFormatSelector.addEventListener('change', (event) => {
+            setContainerDimensions(event.target.value);
+            if (uploadedImageBlob) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    imageBackground.style.backgroundImage = `url(${e.target.result})`;
+                    imageBackground.style.backgroundColor = 'transparent'; // Ensure color is transparent when image is present
+                };
+                reader.readAsDataURL(uploadedImageBlob);
+            } else {
+                imageBackground.style.backgroundImage = 'none';
+                imageBackground.style.backgroundColor = backgroundColorPicker.value;
+            }
+            // imagePreviewContainer.style.backgroundColor should always be transparent now.
+            // No explicit action needed on imagePreviewContainer here.
+        });
+
+        backgroundColorPicker.addEventListener('input', (event) => {
+            // Background color is always set on imageBackground now
+            if (!uploadedImageBlob) { // Only change background color if no image is uploaded
+                imageBackground.style.backgroundColor = event.target.value;
+                imageBackground.style.backgroundImage = 'none'; // Ensure no lingering image
+            }
+            // imagePreviewContainer.style.backgroundColor should always be transparent now.
+        });
+
+        backgroundImageUpload.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                uploadedImageBlob = file;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    imageBackground.style.backgroundImage = `url(${e.target.result})`;
+                    imageBackground.style.backgroundColor = 'transparent'; // Ensure transparent when image is used
+                };
+                reader.readAsDataURL(file);
+            } else {
+                uploadedImageBlob = null;
+                imageBackground.style.backgroundImage = 'none';
+                imageBackground.style.backgroundColor = backgroundColorPicker.value; // Fallback to color if no image
+            }
+            // imagePreviewContainer.style.backgroundColor should always be transparent now.
+        });
+
+        clearImageBtn.addEventListener('click', () => {
+            uploadedImageBlob = null;
+            backgroundImageUpload.value = '';
+            imageBackground.style.backgroundImage = 'none';
+            imageBackground.style.backgroundColor = backgroundColorPicker.value; // Revert to color picker value
+            // imagePreviewContainer.style.backgroundColor should always be transparent now.
+        });
+
+        // Dragging functionality for imagePreviewText
+        imagePreviewText.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            imagePreviewText.classList.add('dragging');
+
+            const style = window.getComputedStyle(imagePreviewText);
+            const matrix = new DOMMatrixReadOnly(style.transform);
+            
+            initialTextX = imagePreviewText.offsetLeft + matrix.m41;
+            initialTextY = imagePreviewText.offsetTop + matrix.m42;
+            
+            initialMouseX = e.clientX;
+            initialMouseY = e.clientY;
+
+            imagePreviewText.style.transform = 'none';
+            imagePreviewText.style.top = `${initialTextY}px`;
+            imagePreviewText.style.left = `${initialTextX}px`;
+        });
+
+        imagePreviewContainer.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            e.preventDefault();
+
+            const dx = e.clientX - initialMouseX;
+            const dy = e.clientY - initialMouseY;
+
+            let newX = initialTextX + dx;
+            let newY = initialTextY + dy;
+
+            const containerRect = imagePreviewContainer.getBoundingClientRect();
+            const textRect = imagePreviewText.getBoundingClientRect();
+
+            const minX = 0;
+            const minY = 0;
+            const maxX = containerRect.width - textRect.width;
+            const maxY = containerRect.height - textRect.height;
+
+            newX = Math.max(minX, Math.min(newX, maxX));
+            newY = Math.max(minY, Math.min(newY, maxY));
+            
+            imagePreviewText.style.left = `${newX}px`;
+            imagePreviewText.style.top = `${newY}px`;
+        });
+
+        imagePreviewContainer.addEventListener('mouseup', () => {
+            isDragging = false;
+            imagePreviewText.classList.remove('dragging');
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+            imagePreviewText.classList.remove('dragging');
+        });
+
+
+        // Download button logic
+        downloadBtn.addEventListener('click', async () => {
+            // Store original styles and positions
+            const originalFontSize = imagePreviewText.style.fontSize;
+            const originalPadding = imagePreviewText.style.padding;
+            const originalTextAlign = imagePreviewText.style.textAlign;
+            const originalLineHeight = imagePreviewText.style.lineHeight;
+            const originalMaxWidth = imagePreviewText.style.maxWidth;
+            const originalMaxHeight = imagePreviewText.style.maxHeight;
+            const originalFontFamily = imagePreviewText.style.fontFamily;
+            const originalDirection = imagePreviewText.style.direction;
+            const originalTextColor = imagePreviewText.style.color;
+
+            const originalContainerWidth = imagePreviewContainer.style.width;
+            const originalContainerHeight = imagePreviewContainer.style.height;
+            const originalContainerMaxWidth = imagePreviewContainer.style.maxWidth;
+            const originalContainerMaxHeight = imagePreviewContainer.style.maxHeight;
+            const originalContainerClasses = imagePreviewContainer.className;
+            
+            // Store original background properties of both elements
+            const originalContainerBackgroundColor = imagePreviewContainer.style.backgroundColor;
+            const originalImageBackground = imageBackground.style.backgroundImage;
+            const originalImageBgColor = imageBackground.style.backgroundColor;
+
+
+            let targetWidth, targetHeight, filename;
+
+            // Set dimensions and filename based on selected format for download
+            switch (currentOutputFormat) {
+                case 'custom':
+                    targetWidth = 2000; // High resolution for custom 1:1
+                    targetHeight = 2000;
+                    filename = 'text_image_custom.png';
+                    break;
+                case 'a4':
+                    targetWidth = 2480; // A4 width at 300 DPI
+                    targetHeight = 3508; // A4 height at 300 DPI
+                    filename = 'text_image_A4.png';
+                    break;
+                case 'instagram-story':
+                    targetWidth = 1080; // Instagram Story native width
+                    targetHeight = 1920; // Instagram Story native height
+                    filename = 'text_image_instagram_story.png';
+                    break;
+            }
+
+            // Temporarily apply capture-specific styles to imagePreviewContainer and imagePreviewText
+            imagePreviewContainer.style.width = `${targetWidth}px`;
+            imagePreviewContainer.style.height = `${targetHeight}px`;
+            imagePreviewContainer.style.maxWidth = `${targetWidth}px`;
+            imagePreviewContainer.style.maxHeight = `${targetHeight}px`;
+            imagePreviewContainer.className = '';
+
+            // Set imagePreviewContainer to transparent for capture (its background is now handled by imageBackground)
+            imagePreviewContainer.style.backgroundColor = 'transparent';
+
+            // Apply the correct background to imageBackground for capture
+            if (uploadedImageBlob) {
+                const reader = new FileReader();
+                await new Promise(resolve => {
+                    reader.onload = (e) => {
+                        imageBackground.style.backgroundImage = `url(${e.target.result})`;
+                        imageBackground.style.backgroundColor = 'transparent';
+                        resolve();
+                    };
+                    reader.readAsDataURL(uploadedImageBlob);
+                });
+            } else {
+                imageBackground.style.backgroundImage = 'none';
+                imageBackground.style.backgroundColor = backgroundColorPicker.value;
+            }
+
+            // Calculate text position for capture based on current preview position
+            const currentPreviewWidthForScaling = parseFloat(originalContainerWidth);
+            const currentPreviewHeightForScaling = parseFloat(originalContainerHeight);
+            
+            const widthScaleFactor = targetWidth / currentPreviewWidthForScaling;
+            const heightScaleFactor = targetHeight / currentPreviewHeightForScaling;
+
+            // Get current computed position
+            const computedStyle = window.getComputedStyle(imagePreviewText);
+            const currentTop = parseFloat(computedStyle.top);
+            const currentLeft = parseFloat(computedStyle.left);
+            const currentTransform = computedStyle.transform;
+
+            let captureTextX, captureTextY;
+
+            // If still centered by transform, calculate initial pixel position
+            if (currentTransform.includes('matrix')) {
+                 const matrix = new DOMMatrixReadOnly(currentTransform);
+                 const translatedX = matrix.m41;
+                 const translatedY = matrix.m42;
+                 
+                 // Initial (untranslated) top/left are 50%
+                 const initialTopPx = (currentPreviewHeightForScaling / 2) - (imagePreviewText.offsetHeight / 2);
+                 const initialLeftPx = (currentPreviewWidthForScaling / 2) - (imagePreviewText.offsetWidth / 2);
+
+                 captureTextX = Math.round((initialLeftPx + translatedX) * widthScaleFactor);
+                 captureTextY = Math.round((initialTopPx + translatedY) * heightScaleFactor);
+            } else {
+                // If direct top/left applied (after drag), use those
+                captureTextX = Math.round(currentLeft * widthScaleFactor);
+                captureTextY = Math.round(currentTop * heightScaleFactor);
+            }
+
+
+            const capturePadding = Math.round(parseFloat(originalPadding) * widthScaleFactor);
+            const captureFontSize = Math.round(parseFloat(fontSizeSlider.value) * widthScaleFactor);
+            
+            imagePreviewText.style.fontSize = `${captureFontSize}px`;
+            imagePreviewText.style.padding = `${capturePadding}px`;
+            imagePreviewText.style.textAlign = currentTextDirection === 'rtl' ? 'right' : 'left';
+            imagePreviewText.style.lineHeight = '1.5';
+            imagePreviewText.style.maxWidth = '90%';
+            imagePreviewText.style.maxHeight = '90%';
+            imagePreviewText.style.fontFamily = selectedFontFamily;
+            imagePreviewText.style.direction = currentTextDirection;
+            imagePreviewText.style.color = textColorPicker.value;
+
+            imagePreviewText.style.top = `${captureTextY}px`;
+            imagePreviewText.style.left = `${captureTextX}px`;
+            imagePreviewText.style.transform = 'none';
+
+            await new Promise(resolve => setTimeout(resolve, 100)); // Short delay for rendering
+
+            try {
+                const canvas = await html2canvas(imagePreviewContainer, {
+                    // **REMOVED backgroundColor option**: Relying on imageBackground element
+                    scale: 1, // Keep scale 1 as we are already setting high targetWidth/Height
+                    useCORS: true,
+                    allowTaint: true,
+                    ignoreElements: (element) => {
+                        return element.tagName === 'IFRAME';
+                    }
+                });
+
+                const link = document.createElement('a');
+                link.download = filename;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+
+            } catch (error) {
+                console.error("خطایی در تولید تصویر رخ داد:", error);
+                alert('خطایی در تولید تصویر رخ داد. لطفاً دوباره تلاش کنید.');
+            } finally {
+                // Restore original styles and positions
+                imagePreviewText.style.fontSize = originalFontSize;
+                imagePreviewText.style.padding = originalPadding;
+                imagePreviewText.style.textAlign = originalTextAlign;
+                imagePreviewText.style.lineHeight = originalLineHeight;
+                imagePreviewText.style.maxWidth = originalMaxWidth;
+                imagePreviewText.style.maxHeight = originalMaxHeight;
+                imagePreviewText.style.fontFamily = originalFontFamily;
+                imagePreviewText.style.direction = originalDirection;
+                imagePreviewText.style.color = originalTextColor;
+
+                imagePreviewContainer.style.width = originalContainerWidth;
+                imagePreviewContainer.style.height = originalContainerHeight;
+                imagePreviewContainer.style.maxWidth = originalContainerMaxWidth;
+                imagePreviewContainer.style.maxHeight = originalContainerMaxHeight;
+                imagePreviewContainer.className = originalContainerClasses;
+                
+                // Restore original background properties
+                imagePreviewContainer.style.backgroundColor = originalContainerBackgroundColor;
+                imageBackground.style.backgroundImage = originalImageBackground;
+                imageBackground.style.backgroundColor = originalImageBgColor;
+
+                setContainerDimensions(currentOutputFormat);
+            }
+        });
+
+        // Initial setup calls
+        createColorPalette();
+        createFontSelector();
+        setContainerDimensions(currentOutputFormat);
+        textInput.style.direction = currentTextDirection;
+        textInput.style.textAlign = 'right';
+        imagePreviewText.style.direction = currentTextDirection;
+        imagePreviewText.style.textAlign = 'right';
+        imagePreviewText.style.color = textColorPicker.value;
+        updatePreview();
+        imagePreviewText.style.fontSize = `${fontSizeSlider.value}px`;
+        // Initial background color for imageBackground (container is transparent)
+        imageBackground.style.backgroundColor = backgroundColorPicker.value;
+    </script>
+</body>
+</html>
