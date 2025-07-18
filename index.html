@@ -26,7 +26,7 @@
         body {
             font-family: 'Amatic SC', 'Far_Rooznameh', sans-serif !important; /* Default font stack for body */
             margin: 0;
-            padding: 20px;
+            padding: 10px; /* Adjusted padding for smaller screens */
             background-color: #f0f2f5;
             display: flex;
             flex-direction: column;
@@ -34,23 +34,29 @@
             color: #333;
         }
 
+        h1 {
+            font-size: 2em; /* Relative font size for heading */
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
         .main-content {
             display: flex;
             flex-wrap: wrap;
             gap: 20px;
-            max-width: 1200px;
+            max-width: 1200px; /* Max width for main content area */
             width: 100%;
             justify-content: center;
-            margin-bottom: 20px;
+            margin: 0 auto 20px auto; /* Center the main content area, add bottom margin */
         }
 
         .controls {
             background-color: #fff;
-            padding: 25px;
+            padding: 20px; /* Adjusted padding */
             border-radius: 10px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             flex: 1;
-            min-width: 300px;
+            min-width: 280px; /* Allow controls to shrink more */
             display: flex;
             flex-direction: column;
             gap: 15px;
@@ -60,6 +66,7 @@
             font-weight: bold;
             margin-bottom: 5px;
             display: block;
+            font-size: 0.95em; /* Slightly smaller label font */
         }
 
         textarea {
@@ -67,37 +74,36 @@
             padding: 10px;
             border: 1px solid #ccc;
             border-radius: 5px;
-            font-size: 16px;
-            min-height: 150px;
+            font-size: 16px; /* Keep base font size readable */
+            min-height: 120px; /* Slightly smaller min-height */
             resize: vertical;
             direction: rtl;
             text-align: right;
+            box-sizing: border-box; /* Include padding in width */
         }
 
-        input[type="range"], input[type="color"], input[type="file"] {
+        input[type="range"], input[type="color"], input[type="file"], select {
             width: 100%;
-            cursor: pointer;
-        }
-        
-        select {
-            width: 100%;
-            padding: 10px;
+            padding: 8px; /* Adjusted padding */
             border: 1px solid #ccc;
             border-radius: 5px;
             background-color: white;
-            font-size: 16px;
+            font-size: 15px; /* Adjusted font size */
             cursor: pointer;
+            box-sizing: border-box; /* Include padding in width */
         }
-
+        
         button {
-            padding: 12px 20px;
+            padding: 10px 15px; /* Adjusted padding */
             background-color: #007bff;
             color: white;
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            font-size: 16px;
+            font-size: 15px; /* Adjusted font size */
             transition: background-color 0.3s ease;
+            width: 100%; /* Make buttons full width on small screens */
+            box-sizing: border-box;
         }
 
         button:hover {
@@ -105,35 +111,50 @@
         }
 
         .output-section {
-            width: 100%;
+            width: 100%; /* Take full available width up to max-width */
+            max-width: 1200px; /* Same max-width as main-content to align */
+            margin: 20px auto; /* Center it horizontally, add vertical margin */
+            background-color: #fff; /* Background for the frame */
+            padding: 20px; /* Padding for content inside the frame */
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             display: flex;
             flex-direction: column;
-            align-items: center;
-            margin-top: 30px;
+            align-items: center; /* This centers the imagePreviewContainer horizontally */
+            box-sizing: border-box; /* Include padding in the width calculation */
         }
 
         #imagePreviewContainer {
-            /* Changed for this fix: Always transparent by default for capture consistency */
             background-color: transparent; 
             display: flex;
             justify-content: center;
             align-items: center;
             overflow: hidden;
-            position: relative; /* Changed for text dragging */
+            position: relative; 
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-            /* Default dimensions will be set by JS */
-            width: 1080px;
-            height: 1080px;
+            
+            width: 100%; /* Take 100% of parent's content area */
+            height: 0; /* Base height, actual height comes from padding-bottom */
+            /* padding-bottom for custom will be set by JS */
+            
+            max-width: 1080px; /* Max width for actual image preview (e.g. for custom 1:1) */
+            max-height: 1080px; /* Max height for actual image preview (e.g. for custom 1:1) */
+            margin-bottom: 20px; /* Space between preview and download button */
         }
 
+        /* These classes will be applied by JS based on format selection */
         #imagePreviewContainer.a4-size {
-            width: 1080px; /* Base width for preview */
-            height: 1527px; /* 1080px * (297/210) approx 1.414 */
+            height: 0; /* Base height */
+            padding-bottom: calc(100% * 1.414); /* A4 aspect ratio */
+            max-width: 1080px;
+            max-height: 1527px;
         }
 
         #imagePreviewContainer.instagram-story-size {
-            width: 1080px;
-            height: 1920px;
+            height: 0; /* Base height */
+            padding-bottom: calc(100% * (1920 / 1080)); /* Instagram story aspect ratio */
+            max-width: 1080px;
+            max-height: 1920px;
         }
 
         #imageBackground {
@@ -145,30 +166,26 @@
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
-            /* Default background color */
-            background-color: #021528; /* Set default here for initial load */
+            background-color: #021528;
         }
 
         #imagePreviewText {
-            /* Changed for dragging */
             position: absolute; 
             top: 50%; 
             left: 50%;
-            transform: translate(-50%, -50%); /* Centers the text initially */
-            
-            color: white; /* Default text color */
-            font-size: 48px;
+            transform: translate(-50%, -50%); 
+            color: white; 
+            font-size: 5vw; /* Use viewport width for initial font size */
             max-width: 90%;
             max-height: 90%;
-            /* text-align: center; This will be set by JS based on direction */
-            padding: 50px;
+            padding: 5vw; /* Use viewport width for padding */
             word-wrap: break-word;
             white-space: pre-wrap;
             line-height: 1.5;
             box-sizing: border-box;
-            z-index: 1; /* Ensure text is above background */
-            background-color: transparent !important; /* IMPORTANT: Force transparency */
-            cursor: grab; /* Indicates draggable */
+            z-index: 1; 
+            background-color: transparent !important; 
+            cursor: grab; 
         }
 
         #imagePreviewText.dragging {
@@ -202,7 +219,7 @@
         }
 
         #downloadBtn {
-            margin-top: 20px;
+            /* margin-top is now handled by margin-bottom on #imagePreviewContainer */
             background-color: #28a745;
         }
 
@@ -214,14 +231,14 @@
         .color-palette {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 15px;
+            gap: 8px; /* Smaller gap */
+            margin-top: 10px; /* Adjusted margin */
             justify-content: center;
         }
 
         .color-box {
-            width: 35px;
-            height: 35px;
+            width: 30px; /* Smaller size */
+            height: 30px; /* Smaller size */
             border: 2px solid transparent;
             border-radius: 50%;
             cursor: pointer;
@@ -246,29 +263,82 @@
         .color-orange { background-color: rgba(255, 165, 0, 0.7); }
         .color-pink { background-color: rgba(255, 192, 203, 0.7); }
 
+        /* Specific styles for the text direction buttons */
+        .controls div[style="display: flex; gap: 10px;"] {
+            flex-direction: column; /* Stack buttons vertically on small screens */
+            gap: 10px;
+        }
+        .controls div[style="display: flex; gap: 10px;"] button {
+            width: 100%; /* Ensure they take full width */
+        }
+
 
         /* Responsive adjustments */
-        @media (max-width: 1100px) {
-            #imagePreviewContainer {
-                /* Defaults to square or A4/Instagram aspect ratio based on selected type */
-                max-width: 1080px;
-                max-height: 1920px; /* Max height for instagram story */
-            }
-            #imagePreviewContainer.a4-size {
-                width: 90vw;
-                height: calc(90vw * 1.414);
-            }
-            #imagePreviewContainer.instagram-story-size {
-                width: 90vw;
-                height: calc(90vw * (1920 / 1080));
-            }
-            #imagePreviewText {
-                 /* padding: 5vw; Keeping padding in px for consistent drag behavior */
-            }
-        }
         @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
             .main-content {
                 flex-direction: column;
+                gap: 15px;
+            }
+
+            .controls {
+                padding: 15px;
+                gap: 10px;
+            }
+
+            label {
+                font-size: 0.9em;
+            }
+
+            textarea, input[type="range"], input[type="color"], input[type="file"], select, button {
+                font-size: 14px;
+                padding: 8px;
+            }
+
+            .output-section {
+                padding: 15px; /* Reduce padding for smaller screens */
+            }
+
+            #imagePreviewText {
+                font-size: 6vw; /* Larger font on small screens to be more readable */
+                padding: 3vw; /* Smaller padding on small screens */
+            }
+
+            .color-palette {
+                gap: 6px; /* Even smaller gap for colors */
+            }
+
+            .color-box {
+                width: 28px;
+                height: 28px;
+            }
+
+            #downloadBtn {
+                font-size: 15px;
+                padding: 10px 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.5em;
+            }
+            .controls div[style="display: flex; gap: 10px;"] {
+                flex-direction: column; /* Ensure vertical stack on very small screens */
+                gap: 8px;
+            }
+            .controls div[style="display: flex; gap: 10px;"] button {
+                width: 100%;
+            }
+            .output-section {
+                padding: 10px; /* Further reduce padding on very small screens */
             }
         }
     </style>
@@ -300,14 +370,18 @@
             </div>
 
             <label for="textColorPicker">انتخاب رنگ متن:</label>
-            <input type="color" id="textColorPicker" value="#FFFFFF"> <label for="backgroundColorPicker">انتخاب رنگ پس‌زمینه:</label>
-            <input type="color" id="backgroundColorPicker" value="#021528"> <label for="backgroundImageUpload">آپلود عکس پس‌زمینه:</label>
+            <input type="color" id="textColorPicker" value="#FFFFFF"> 
+            
+            <label for="backgroundColorPicker">انتخاب رنگ پس‌زمینه:</label>
+            <input type="color" id="backgroundColorPicker" value="#021528"> 
+            
+            <label for="backgroundImageUpload">آپلود عکس پس‌زمینه:</label>
             <input type="file" id="backgroundImageUpload" accept="image/*">
             <button id="clearImageBtn" style="background-color: #dc3545;">پاک کردن عکس</button>
 
             <label>انتخاب رنگ هایلایت:</label>
             <div class="color-palette" id="colorPalette">
-                </div>
+            </div>
 
             <button id="highlightBtn">هایلایت کردن متن انتخاب شده</button>
         </div>
@@ -316,7 +390,8 @@
     <div class="output-section">
         <h2>پیش‌نمایش تصویر</h2>
         <div id="imagePreviewContainer">
-            <div id="imageBackground"></div> <div id="imagePreviewText"></div>
+            <div id="imageBackground"></div> 
+            <div id="imagePreviewText"></div>
         </div>
         <button id="downloadBtn">دانلود تصویر</button>
     </div>
@@ -530,25 +605,30 @@
             imagePreviewContainer.classList.remove('a4-size', 'instagram-story-size');
             currentOutputFormat = format;
 
+            // Clear previous inline styles to allow CSS classes to take over
+            imagePreviewContainer.style.height = ''; 
+            imagePreviewContainer.style.paddingBottom = ''; 
+            imagePreviewContainer.style.maxWidth = ''; 
+            imagePreviewContainer.style.maxHeight = '';
+
+
             switch (format) {
                 case 'custom':
-                    imagePreviewContainer.style.width = '1080px';
-                    imagePreviewContainer.style.height = '1080px';
+                    // Apply padding-bottom for 1:1 aspect ratio for custom
+                    imagePreviewContainer.style.paddingBottom = '100%'; 
+                    // Set max-width/height for custom explicitly via JS (for consistency with CSS classes)
+                    imagePreviewContainer.style.maxWidth = '1080px'; 
+                    imagePreviewContainer.style.maxHeight = '1080px'; 
                     break;
                 case 'a4':
                     imagePreviewContainer.classList.add('a4-size');
-                    imagePreviewContainer.style.width = '1080px';
-                    imagePreviewContainer.style.height = '1527px';
+                    // Max-width/height will be set by the class.
                     break;
                 case 'instagram-story':
                     imagePreviewContainer.classList.add('instagram-story-size');
-                    imagePreviewContainer.style.width = '1080px';
-                    imagePreviewContainer.style.height = '1920px';
+                    // Max-width/height will be set by the class.
                     break;
             }
-            imagePreviewContainer.style.maxWidth = '';
-            imagePreviewContainer.style.maxHeight = '';
-
             // Reset text position to center when format changes
             resetTextPosition();
         }
@@ -568,7 +648,7 @@
         fontSizeSlider.addEventListener('input', () => {
             const fontSize = fontSizeSlider.value;
             fontSizeValue.textContent = fontSize;
-            imagePreviewText.style.fontSize = `${fontSize}px`;
+            imagePreviewText.style.fontSize = `${fontSize}px`; // This is in px for the preview
         });
 
         fontSelector.addEventListener('change', () => {
@@ -636,17 +716,13 @@
                 imageBackground.style.backgroundImage = 'none';
                 imageBackground.style.backgroundColor = backgroundColorPicker.value;
             }
-            // imagePreviewContainer.style.backgroundColor should always be transparent now.
-            // No explicit action needed on imagePreviewContainer here.
         });
 
         backgroundColorPicker.addEventListener('input', (event) => {
-            // Background color is always set on imageBackground now
             if (!uploadedImageBlob) { // Only change background color if no image is uploaded
                 imageBackground.style.backgroundColor = event.target.value;
                 imageBackground.style.backgroundImage = 'none'; // Ensure no lingering image
             }
-            // imagePreviewContainer.style.backgroundColor should always be transparent now.
         });
 
         backgroundImageUpload.addEventListener('change', (event) => {
@@ -658,13 +734,13 @@
                     imageBackground.style.backgroundImage = `url(${e.target.result})`;
                     imageBackground.style.backgroundColor = 'transparent'; // Ensure transparent when image is used
                 };
-                reader.readAsDataURL(file);
+                    reader.readAsDataURL(file);
             } else {
                 uploadedImageBlob = null;
+                backgroundImageUpload.value = '';
                 imageBackground.style.backgroundImage = 'none';
                 imageBackground.style.backgroundColor = backgroundColorPicker.value; // Fallback to color if no image
             }
-            // imagePreviewContainer.style.backgroundColor should always be transparent now.
         });
 
         clearImageBtn.addEventListener('click', () => {
@@ -672,7 +748,6 @@
             backgroundImageUpload.value = '';
             imageBackground.style.backgroundImage = 'none';
             imageBackground.style.backgroundColor = backgroundColorPicker.value; // Revert to color picker value
-            // imagePreviewContainer.style.backgroundColor should always be transparent now.
         });
 
         // Dragging functionality for imagePreviewText
@@ -743,11 +818,17 @@
             const originalDirection = imagePreviewText.style.direction;
             const originalTextColor = imagePreviewText.style.color;
 
+            // Store actual computed preview dimensions *before* changing them for capture
+            const computedContainerStyle = window.getComputedStyle(imagePreviewContainer);
+            const currentPreviewWidthForScaling = parseFloat(computedContainerStyle.width);
+            const currentPreviewHeightForScaling = parseFloat(computedContainerStyle.height);
+
             const originalContainerWidth = imagePreviewContainer.style.width;
             const originalContainerHeight = imagePreviewContainer.style.height;
             const originalContainerMaxWidth = imagePreviewContainer.style.maxWidth;
             const originalContainerMaxHeight = imagePreviewContainer.style.maxHeight;
             const originalContainerClasses = imagePreviewContainer.className;
+            const originalContainerPaddingBottom = imagePreviewContainer.style.paddingBottom;
             
             // Store original background properties of both elements
             const originalContainerBackgroundColor = imagePreviewContainer.style.backgroundColor;
@@ -781,7 +862,8 @@
             imagePreviewContainer.style.height = `${targetHeight}px`;
             imagePreviewContainer.style.maxWidth = `${targetWidth}px`;
             imagePreviewContainer.style.maxHeight = `${targetHeight}px`;
-            imagePreviewContainer.className = '';
+            imagePreviewContainer.className = ''; // Remove aspect ratio classes
+            imagePreviewContainer.style.paddingBottom = '0'; // Clear padding-bottom hack for fixed size capture
 
             // Set imagePreviewContainer to transparent for capture (its background is now handled by imageBackground)
             imagePreviewContainer.style.backgroundColor = 'transparent';
@@ -803,17 +885,15 @@
             }
 
             // Calculate text position for capture based on current preview position
-            const currentPreviewWidthForScaling = parseFloat(originalContainerWidth);
-            const currentPreviewHeightForScaling = parseFloat(originalContainerHeight);
             
             const widthScaleFactor = targetWidth / currentPreviewWidthForScaling;
             const heightScaleFactor = targetHeight / currentPreviewHeightForScaling;
 
             // Get current computed position
-            const computedStyle = window.getComputedStyle(imagePreviewText);
-            const currentTop = parseFloat(computedStyle.top);
-            const currentLeft = parseFloat(computedStyle.left);
-            const currentTransform = computedStyle.transform;
+            const computedTextStyle = window.getComputedStyle(imagePreviewText);
+            let currentTop = parseFloat(computedTextStyle.top);
+            let currentLeft = parseFloat(computedTextStyle.left);
+            const currentTransform = computedTextStyle.transform;
 
             let captureTextX, captureTextY;
 
@@ -824,8 +904,10 @@
                  const translatedY = matrix.m42;
                  
                  // Initial (untranslated) top/left are 50%
-                 const initialTopPx = (currentPreviewHeightForScaling / 2) - (imagePreviewText.offsetHeight / 2);
-                 const initialLeftPx = (currentPreviewWidthForScaling / 2) - (imagePreviewText.offsetWidth / 2);
+                 // We need textRect dimensions to calculate center.
+                 const tempTextRect = imagePreviewText.getBoundingClientRect();
+                 const initialTopPx = (currentPreviewHeightForScaling / 2) - (tempTextRect.height / 2);
+                 const initialLeftPx = (currentPreviewWidthForScaling / 2) - (tempTextRect.width / 2);
 
                  captureTextX = Math.round((initialLeftPx + translatedX) * widthScaleFactor);
                  captureTextY = Math.round((initialTopPx + translatedY) * heightScaleFactor);
@@ -836,7 +918,7 @@
             }
 
 
-            const capturePadding = Math.round(parseFloat(originalPadding) * widthScaleFactor);
+            const capturePadding = Math.round(parseFloat(imagePreviewText.style.padding || window.getComputedStyle(imagePreviewText).padding.replace('px','')) * widthScaleFactor);
             const captureFontSize = Math.round(parseFloat(fontSizeSlider.value) * widthScaleFactor);
             
             imagePreviewText.style.fontSize = `${captureFontSize}px`;
@@ -851,14 +933,13 @@
 
             imagePreviewText.style.top = `${captureTextY}px`;
             imagePreviewText.style.left = `${captureTextX}px`;
-            imagePreviewText.style.transform = 'none';
+            imagePreviewText.style.transform = 'none'; // Ensure no lingering transform for capture
 
             await new Promise(resolve => setTimeout(resolve, 100)); // Short delay for rendering
 
             try {
                 const canvas = await html2canvas(imagePreviewContainer, {
-                    // **REMOVED backgroundColor option**: Relying on imageBackground element
-                    scale: 1, // Keep scale 1 as we are already setting high targetWidth/Height
+                    scale: 1, 
                     useCORS: true,
                     allowTaint: true,
                     ignoreElements: (element) => {
@@ -891,12 +972,14 @@
                 imagePreviewContainer.style.maxWidth = originalContainerMaxWidth;
                 imagePreviewContainer.style.maxHeight = originalContainerMaxHeight;
                 imagePreviewContainer.className = originalContainerClasses;
+                imagePreviewContainer.style.paddingBottom = originalContainerPaddingBottom; // Restore padding-bottom
                 
                 // Restore original background properties
                 imagePreviewContainer.style.backgroundColor = originalContainerBackgroundColor;
                 imageBackground.style.backgroundImage = originalImageBackground;
                 imageBackground.style.backgroundColor = originalImageBgColor;
 
+                // Reapply the correct dimensions to the container
                 setContainerDimensions(currentOutputFormat);
             }
         });
@@ -911,7 +994,8 @@
         imagePreviewText.style.textAlign = 'right';
         imagePreviewText.style.color = textColorPicker.value;
         updatePreview();
-        imagePreviewText.style.fontSize = `${fontSizeSlider.value}px`;
+        // Set initial font size based on slider value for preview (px)
+        imagePreviewText.style.fontSize = `${fontSizeSlider.value}px`; 
         // Initial background color for imageBackground (container is transparent)
         imageBackground.style.backgroundColor = backgroundColorPicker.value;
     </script>
