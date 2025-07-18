@@ -750,7 +750,7 @@
             imageBackground.style.backgroundColor = backgroundColorPicker.value; // Revert to color picker value
         });
 
-        // Dragging functionality for imagePreviewText
+        // Dragging functionality for imagePreviewText (Mouse Events)
         imagePreviewText.addEventListener('mousedown', (e) => {
             isDragging = true;
             imagePreviewText.classList.add('dragging');
@@ -771,7 +771,7 @@
 
         imagePreviewContainer.addEventListener('mousemove', (e) => {
             if (!isDragging) return;
-            e.preventDefault();
+            e.preventDefault(); // Prevent default text selection/scrolling
 
             const dx = e.clientX - initialMouseX;
             const dy = e.clientY - initialMouseY;
@@ -782,6 +782,7 @@
             const containerRect = imagePreviewContainer.getBoundingClientRect();
             const textRect = imagePreviewText.getBoundingClientRect();
 
+            // Boundary checks
             const minX = 0;
             const minY = 0;
             const maxX = containerRect.width - textRect.width;
@@ -799,7 +800,63 @@
             imagePreviewText.classList.remove('dragging');
         });
 
-        document.addEventListener('mouseup', () => {
+        document.addEventListener('mouseup', () => { // For mouseup outside container
+            isDragging = false;
+            imagePreviewText.classList.remove('dragging');
+        });
+
+        // Dragging functionality for imagePreviewText (Touch Events)
+        imagePreviewText.addEventListener('touchstart', (e) => {
+            isDragging = true;
+            imagePreviewText.classList.add('dragging');
+            e.preventDefault(); // Prevent default touch behavior (e.g., scrolling)
+
+            const style = window.getComputedStyle(imagePreviewText);
+            const matrix = new DOMMatrixReadOnly(style.transform);
+            
+            initialTextX = imagePreviewText.offsetLeft + matrix.m41;
+            initialTextY = imagePreviewText.offsetTop + matrix.m42;
+            
+            initialMouseX = e.touches[0].clientX; // Use clientX from the first touch
+            initialMouseY = e.touches[0].clientY; // Use clientY from the first touch
+
+            imagePreviewText.style.transform = 'none'; // Remove transform for direct top/left manipulation
+            imagePreviewText.style.top = `${initialTextY}px`;
+            imagePreviewText.style.left = `${initialTextX}px`;
+        });
+
+        imagePreviewContainer.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+            e.preventDefault(); // Prevent default touch behavior (e.g., scrolling)
+
+            const dx = e.touches[0].clientX - initialMouseX;
+            const dy = e.touches[0].clientY - initialMouseY;
+
+            let newX = initialTextX + dx;
+            let newY = initialTextY + dy;
+
+            const containerRect = imagePreviewContainer.getBoundingClientRect();
+            const textRect = imagePreviewText.getBoundingClientRect();
+
+            // Boundary checks
+            const minX = 0;
+            const minY = 0;
+            const maxX = containerRect.width - textRect.width;
+            const maxY = containerRect.height - textRect.height;
+
+            newX = Math.max(minX, Math.min(newX, maxX));
+            newY = Math.max(minY, Math.min(newY, maxY));
+            
+            imagePreviewText.style.left = `${newX}px`;
+            imagePreviewText.style.top = `${newY}px`;
+        });
+
+        imagePreviewContainer.addEventListener('touchend', () => {
+            isDragging = false;
+            imagePreviewText.classList.remove('dragging');
+        });
+
+        document.addEventListener('touchend', () => { // For touchend outside container
             isDragging = false;
             imagePreviewText.classList.remove('dragging');
         });
